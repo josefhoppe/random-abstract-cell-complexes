@@ -1,0 +1,392 @@
+from helper import coinsizes
+import numpy as np
+import pandas as pd
+from Cython.Build import cythonize
+
+rule all:
+    input:
+        "figures/sampled_count_estimation_full_100.pdf",
+        "figures/estimation_er.pdf",
+        "figures/estimation_er_approx.pdf",
+        "figures/count_estimation.pdf",
+        "figures/time_exp.pdf",
+        "figures/realworld_tntp-Anaheim_exp_error_iter.pdf",
+        "figures/cycle_count.pdf",
+        "figures/estimation_er_inacc.pdf",
+        "figures/estimation_er_approx_inacc.pdf",
+        "figures/estimation_er_mean_per_len_sparse.pdf",
+        "figures/estimation_er_mean_per_len.pdf",
+        "figures/sampled_count_estimation_sbm_20-0.4-0.2.pdf",
+        "figures/sampled_count_estimation_sbm_20-0.1-0.5.pdf",
+        "figures/estimation_sbm_approx_ratio.pdf",
+        "figures/estimation_sbm_heterophilic_approx_ratio.pdf",
+        "figures/sampled_count_estimation_fullbip_100.pdf",
+        "figures/sampled_count_estimation_barabasialbert_20-0.15.pdf",
+        "figures/sampled_count_estimation_config_20.pdf",
+        "figures/sampled_count_estimation_karate_0.pdf",
+        "figures/sampled_count_estimation_november17_0.pdf",
+        "figures/actual_cell_count.pdf",
+        "figures/homology.pdf",
+        "figures/orientability.pdf",
+
+rule cythonize:
+    # Cythonizes the required files.
+    input:
+        "random_ccs/sampling.pyx",
+        "random_ccs/spanning_trees.pyx"
+    output:
+        # actual output filename sytem-dependent and not relevant -> __cythonized__ used to mark dependencies and detect changes by snakemake.
+        "__cythonized__"
+    shell:
+        # remove option '-a' if you don't need to debug / profile
+        "C_INCLUDE_PATH=$(python -c 'import numpy; print(numpy.get_include())') cythonize -i -a {input} && touch {output}"
+
+rule estimation_exp_er:
+    input: "__cythonized__"
+    output:
+        "results/prob-estimation/{kind,[a-zA-Z]+}-{size,[0-9]+}-{p,[0-9\.]+}.csv"
+    script:
+        "scripts/estimate_er.py"
+
+rule estimation_exp_sbm:
+    input: "__cythonized__"
+    output:
+        "results/prob-estimation/{kind,[a-zA-Z]+}-{size,[0-9]+}-{p,[0-9\.]+}-{q,[0-9\.]+}.csv"
+    script:
+        "scripts/estimate_er.py"
+
+rule estimation_exp_config:
+    input: "__cythonized__"
+    output:
+        "results/prob-estimation/{kind,[a-zA-Z]+}-{size,[0-9]+}.csv"
+    script:
+        "scripts/estimate_er.py"
+
+rule time_exp:
+    threads: 2
+    input: "__cythonized__"
+    output:
+        "results/time/{method}_{n}_{p}_{N_factor}_{samples}.csv"
+    script:
+        "scripts/time_exp.py"
+
+rule time_exp_plot:
+    output:
+        "figures/time_exp.pdf"
+    input:
+        expand("results/time/{method}_{n}_{p}_{N_factor}_{samples}.csv", method=['er-est'], n=coinsizes(10,200), p=[.5], N_factor=[1], samples=[1000]),
+        expand("results/time/{method}_{n}_{p}_{N_factor}_{samples}.csv", method=['er-est'], n=coinsizes(50,200), p=[.1], N_factor=[1], samples=[1000]),
+        expand("results/time/{method}_{n}_{p}_{N_factor}_{samples}.csv", method=['er-est'], n=coinsizes(100,500), p=[.05], N_factor=[1], samples=[1000]),
+        expand("results/time/{method}_{n}_{p}_{N_factor}_{samples}.csv", method=['er-approx-est'], n=coinsizes(10,2000), p=[.5], N_factor=[1], samples=[1000]),
+        expand("results/time/{method}_{n}_{p}_{N_factor}_{samples}.csv", method=['er-approx-est'], n=coinsizes(50,5000), p=[.1], N_factor=[1], samples=[1000]),
+        expand("results/time/{method}_{n}_{p}_{N_factor}_{samples}.csv", method=['er-approx-est'], n=coinsizes(100,5000), p=[.05], N_factor=[1], samples=[1000]),
+        expand("results/time/{method}_{n}_{p}_{N_factor}_{samples}.csv", method=['er-est'], n=coinsizes(20,200), p=[.2], N_factor=[1], samples=[1000]),
+        expand("results/time/{method}_{n}_{p}_{N_factor}_{samples}.csv", method=['er-approx-est'], n=coinsizes(20,2000), p=[.2], N_factor=[1], samples=[1000]),
+        #expand("results/time/{method}_{n}_{p}_{P}_{P_l}_{samples}.csv", method=['py-rst'], n=coinsizes(10,1000), p=[.5], P=[.1], P_l=[.1], samples=[50])
+    script:
+        "scripts/plot_time_exp.py"
+
+rule estimation_er_approx_plot:
+    input:
+        "results/prob-estimation/er-30-0.5.csv"
+    params:
+        y_axis="approx_estimated2",
+        y_label="approx. occ. probability",
+        x_label="correct occurence probability",
+        relative_inset='True'
+    output:
+        "figures/estimation_er_approx.pdf"
+    script:
+        "scripts/plot_estimation.py"
+
+rule estimation_sbm_heterophilic_approx_plot:
+    input:
+        "results/prob-estimation/sbm-50-0.2-0.4.csv"
+    params:
+        y_axis="approx_estimated2",
+        y_label="approx. occ. probability",
+        x_label="correct occurence probability",
+        ratio = 'True'
+    output:
+        "figures/estimation_sbm_heterophilic_approx_ratio.pdf",
+    script:
+        "scripts/plot_estimation.py"
+
+rule estimation_sbm_approx_plot:
+    input:
+        "results/prob-estimation/sbm-30-0.4-0.2.csv"
+    params:
+        y_axis="approx_estimated2",
+        y_label="approx. occ. probability",
+        x_label="correct occurence probability",
+        ratio = 'True'
+    output:
+        "figures/estimation_sbm_approx_ratio.pdf",
+    script:
+        "scripts/plot_estimation.py"
+
+rule estimation_ba_approx_plot:
+    input:
+        "results/prob-estimation/barabasialbert-30-0.25.csv"
+    params:
+        y_axis="approx_estimated2",
+        y_label="approx. occ. probability",
+        x_label="correct occurence probability",
+        relative_inset='True'
+    output:
+        "figures/estimation_ba_approx.pdf"
+    script:
+        "scripts/plot_estimation.py"
+
+rule estimation_er_approx_inaccurate_plot:
+    input:
+        "results/prob-estimation/er-30-0.1.csv"
+    params:
+        y_axis="approx_estimated2",
+        y_label="approx. occ. probability",
+        x_label="correct occurence probability",
+        relative_inset='True'
+    output:
+        "figures/estimation_er_approx_inacc.pdf"
+    script:
+        "scripts/plot_estimation.py"
+
+
+rule estimation_config_approx_plot:
+    input:
+        "results/prob-estimation/config-30.csv"
+    params:
+        y_axis="approx_estimated2",
+        y_label="approx. occ. probability",
+        x_label="correct occurence probability",
+        relative_inset='True',
+        relative_inset_y_log='True',
+        relative_inset_pos='upper left'
+    output:
+        "figures/estimation_config_approx.pdf"
+    script:
+        "scripts/plot_estimation.py"
+
+rule cycle_count_plot:
+    input:
+        "results/count-estimation-er/20-0.3-1000-50.csv"
+    params:
+        y="count",
+        x="l",
+        y_label="number of cycles",
+        x_label="length",
+        relative_inset='False',
+        count_inset='False',
+        red_line='a_priori'
+    output:
+        "figures/cycle_count.pdf"
+    script:
+        "scripts/plot_count.py"
+
+rule estimation_er_plot:
+    input:
+        "results/prob-estimation/er-30-0.5.csv"
+    output:
+        "figures/estimation_er.pdf",
+    params:
+        y_label="est. occ. probability",
+        x_label="correct occurence probability",
+        relative_inset='True'
+    script:
+        "scripts/plot_estimation.py"
+
+rule estimation_er_inacc_plot:
+    input:
+        "results/prob-estimation/er-30-0.1.csv"
+    output:
+        "figures/estimation_er_inacc.pdf",
+    params:
+        y_label="est. occ. probability",
+        x_label="correct occurence probability",
+        relative_inset='True'
+    script:
+        "scripts/plot_estimation.py"
+
+rule estimation_er_mean_per_len_plot:
+    input:
+        "results/prob-estimation/er-30-0.5.csv"
+    output:
+        "figures/estimation_er_mean_per_len.pdf",
+    params:
+        y_axis="mean_per_length",
+        y_label="mean occ. probability for len",
+        x_label="correct occurence probability",
+        relative_inset='True'
+    script:
+        "scripts/plot_estimation.py"
+
+rule estimation_er_mean_per_len_sparse_plot:
+    input:
+        "results/prob-estimation/er-30-0.1.csv"
+    output:
+        "figures/estimation_er_mean_per_len_sparse.pdf",
+    params:
+        y_axis="mean_per_length",
+        y_label="mean occ. probability for len",
+        x_label="correct occurence probability",
+        relative_inset='True'
+    script:
+        "scripts/plot_estimation.py"
+
+rule homology_exp:
+    input: "__cythonized__"
+    output:
+        "results/homology-exp/{model}/{n}-{p}-{N}-{samples}-{runs}.csv"
+    script:
+        "scripts/homology_exp.py"
+
+homology_exps = expand("results/homology-exp/{model}/{n}-{p}-{N}-{samples}-{runs}.csv", n=[20], p=[.5], N=list(range(120)), samples=[200], runs=[50], model=['cellular_er', 'triangulation'])
+
+rule plot_actual_num:
+    output:
+        "figures/actual_cell_count.pdf"
+    input:
+        homology_exps
+    params:
+        plot_args = {'x':'N', 'y':'N_act', 'errorbar': 'sd', 'style': 'model'}
+    script:
+        "scripts/plot_generic.py"
+
+rule plot_orientability:
+    output:
+        "figures/orientability.pdf"
+    input:
+        homology_exps
+    script:
+        "scripts/plot_orientable.py"
+
+rule plot_homology:
+    output:
+        "figures/homology.pdf"
+    input:
+        homology_exps
+    script:
+        "scripts/plot_homology.py"
+
+rule estimate_aggregated:
+    output: "results/count-estimation{kind,[^/]+}/{params,[^/]+}-{runs}.csv"
+    input: lambda wildcards: expand("results/count-estimation{{kind}}/run/{{params}}-{run}.csv", run=list(range(int(wildcards.runs))))
+    run:
+        df_data = pd.concat([pd.read_csv(file) for file in input])
+        df_data.to_csv(output[0])
+
+rule estimate_count:
+    input: "__cythonized__"
+    output:
+        "results/count-estimation-{kind}/run/{n,[0-9]+}-{p,[0-9\.]+}-{samples,[0-9]+}-{run,[0-9]+}.csv"
+    script:
+        "scripts/count_exp.py"
+
+rule estimate_count_full:
+    input: "__cythonized__"
+    output:
+        "results/count-estimation-{kind}/run/{n,[0-9]+}-{samples,[0-9]+}-{run,[0-9]+}.csv"
+    script:
+        "scripts/count_exp.py"
+
+rule estimate_count_sbm:
+    input: "__cythonized__"
+    output:
+        "results/count-estimation-{kind}/run/{n,[0-9]+}-{p}-{q}-{samples,[0-9]+}-{run,[0-9]+}.csv"
+    script:
+        "scripts/count_exp.py"
+
+rule count_plot:
+    output:
+        "figures/count_estimation.pdf"
+    params:
+        #ratio='True',
+        #x='count',
+        x='count',
+        #norm='count',
+        y='sample_est',
+        #relative_inset='False'
+        y_label='sampling-based count estimate',
+        x_label='correct cell count'
+    input:
+        "results/count-estimation-er/12-0.5-1000-50.csv"
+    script:
+        "scripts/plot_count.py"
+    
+rule sampled_count_plot_variable:
+    output:
+        "figures/sampled_count_estimation_{kind}_{params}.pdf"
+    input:
+        "results/count-estimation-{kind}/{params}-1000-50.csv"
+    params:
+        #y='combined',
+        #x='count',
+        x='count',
+        #norm='count',
+        y='sample_est',
+        #ratio='True'
+    script:
+        "scripts/plot_count.py"
+
+# The remainder was taken or adapted from:
+# Hoppe, J. and Schaub, M. T. Representing edge flows on graphs via sparse cell complexes.
+# In: The Second Learning on Graphs Conference, 2023.
+# https://openreview.net/forum?id=qix189lq5D
+# https://github.com/josefhoppe/edge-flow-cell-complexes
+
+rule download_tntp_dataset:
+    output:
+        "resources/tntp-{city}/{type}.tntp"
+    run:
+        try:
+            shell("wget https://raw.githubusercontent.com/bstabler/TransportationNetworks/master/{wildcards.city}/{wildcards.city}_{wildcards.type}.tntp -O {output}")
+        except:
+            shell("wget https://raw.githubusercontent.com/bstabler/TransportationNetworks/master/{wildcards.city}/" + wildcards.city.lower() + "_{wildcards.type}.tntp -O {output}")
+
+rule process_tntp_data:
+    input:
+        "resources/tntp-{city}/trips.tntp"
+    output:
+        expand("resources/tntp-{{city}}/{file}", file=['graph.txt', 'flows.csv'])
+    script:
+        "scripts/edge_flow_cell_complexes/process_tntp.py"
+
+rule simulate_realworld:
+    output:
+        "results/realworld/{dataset}/{method}/{flows}/{iterations}x{cell_candidates}x{clusters}.csv",
+        "results/realworld/{dataset}/{method}/{flows}/{iterations}x{cell_candidates}x{clusters}_result.txt"
+    input:
+        expand("resources/{{dataset}}/{file}", file=['graph.txt', 'flows.csv']),
+        "__cythonized__"
+    script:
+        "scripts/edge_flow_cell_complexes/realworld_experiment.py"
+
+rule plot_realworld_exp_error_iter:
+    input:
+        expand("results/realworld/{{dataset}}/{method}/{flows}/{iterations}x{cell_candidates}x{clusters}.csv", method=['triangles', 'max', 'similarity', ], flows=[1], iterations=[1000], cell_candidates=[1,5,20], clusters=[11]),
+        expand("results/realworld/{{dataset}}/{method}/{flows}/{iterations}x{cell_candidates}x{clusters}.csv", method=['random'], flows=[1], iterations=[1000], cell_candidates=[1], clusters=[11])
+    params:
+        x_axis='iterations',
+        #x_axis='total_cell_len',
+        #x_label='$||B_2||_0$',
+        max_x=1000
+    output:
+        "figures/realworld_{dataset}_exp_error_iter.pdf"
+    script:
+        "scripts/edge_flow_cell_complexes/plot_realworld_exp_error.py"
+
+
+
+rule plot_realworld_exp_error:
+    input:
+        expand("results/realworld/{{dataset}}/{method}/{flows}/{iterations}x{cell_candidates}x{clusters}.csv", method=['triangles', 'max', 'similarity'], flows=[1], iterations=[1000], cell_candidates=[1,5,20], clusters=[11]),
+        expand("results/realworld/{{dataset}}/{method}/{flows}/{iterations}x{cell_candidates}x{clusters}.csv", method=['random'], flows=[1], iterations=[1000], cell_candidates=[1], clusters=[11])
+    params:
+        #x_axis='iterations',
+        x_axis='total_cell_len',
+        x_label='$||B_2||_0$',
+        alt_max_x=3000
+    output:
+        "figures/realworld_{dataset}_exp_error.pdf"
+    script:
+        "scripts/edge_flow_cell_complexes/plot_realworld_exp_error.py"
