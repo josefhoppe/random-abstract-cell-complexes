@@ -9,12 +9,14 @@
 ## About
 
 This repository contains the evaluation workflow for the paper *Random Abstract Cell Complexes*.
-You can find the accompanying Python package at [PyRaCCooN](https://github.com/josefhoppe/py-raccoon).
+You can find the accompanying Python package at [🦝 PyRaCCooN](https://github.com/josefhoppe/py-raccoon).
 If you use this code, please cite our paper:
 
 ```
 
 ```
+
+For the modified experiment of Bodnar et al. [1], see https://github.com/josefhoppe/cwn-random-ccs
 
 ## Running numerical experiments
 
@@ -45,7 +47,8 @@ There are five main experiments:
 
 ## References
 
-- [1]: Hoppe, Josef, and Michael T. Schaub. "Representing Edge Flows on Graphs via Sparse Cell Complexes." Learning on Graphs Conference. PMLR, 2024.
+- [1]: Bodnar, Cristian, et al. "Weisfeiler and Lehman go cellular: CW Networks." *Advances in neural information processing systems* 34 (2021): 2625-2640. [[PDF]](https://proceedings.mlr.press/v231/hoppe24a/hoppe24a.pdf)
+- [2]: Hoppe, Josef, and Michael T. Schaub. "Representing Edge Flows on Graphs via Sparse Cell Complexes." *Learning on Graphs Conference*. PMLR, 2024. [[PDF]](https://proceedings.neurips.cc/paper_files/paper/2021/file/157792e4abb490f99dbd738483e0d2d4-Paper.pdf)
 
 ## Acknowledgements
 
