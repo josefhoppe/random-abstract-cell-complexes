@@ -26,8 +26,8 @@ To run the experiments:
 3. Activate environment: `conda activate rcc`
 4. Run snakemake: `snakemake -c100 all`
 
-For us, running all experiments takes less than 24 hours, so you may want to build individual artifacts instead, for example `snakemake -c20 figures/homology.pdf`.
-The most time-consuming experiment is the `time_exp.pdf`.
+For us, running all experiments takes about 2 hours (or around 23 core-hours).
+You can also build individual artifacts instead, for example `snakemake -c20 figures/homology.pdf`.
 
 ## Workflow structure
 
