@@ -307,7 +307,7 @@ rule count_plot:
         y='sample_est',
         #relative_inset='False'
         y_label='sampling-based count estimate',
-        x_label='correct cell count'
+        x_label='correct cycle count'
     input:
         "results/count-estimation-er/12-0.5-1000-50.csv"
     script:
@@ -324,6 +324,8 @@ rule sampled_count_plot_variable:
         x='count',
         #norm='count',
         y='sample_est',
+        y_label='sampling-based count estimate',
+        x_label='correct cycle count'
         #ratio='True'
     script:
         "scripts/plot_count.py"

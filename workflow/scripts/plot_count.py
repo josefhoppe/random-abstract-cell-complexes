@@ -59,6 +59,11 @@ def plot_on_ax(df_data, ax, x_axis, y_axis, ratio, normalize=None, x_label=None,
             plt.plot([min_count, max_count], [1, 1], 'r-')
         if df_est[y_axis].max() / df_est[y_axis][df_est[y_axis] > 0].min() > 100 and auto_ylog or df_est[y_axis].max() > 20:
             plot.set(yscale='log') 
+            if plot.get_ylim()[1] < 10:
+                maxval = df_data[y_axis].max()
+                minval = df_data[y_axis][df_est[y_axis] > 0].min()
+                ticks = [min([x for x in [.2, .5, 1] if minval <= x]), 1, max([x for x in [1, 2, 5] if x <= maxval])]
+                plot.set_yticks(ticks, ticks)
     else:
         if opt_line:
             plt.plot([min_count, max_count], [min_count, max_count], 'r-')
@@ -86,7 +91,7 @@ if relative_inset:
     inset_plot = plot_on_ax(df_est.copy(), axins, 'l', y, True, 'count', 'len', '', 'rel. error', auto_ylog=False)
 if count_inset:
     axins2 = inset_axes(plot, "35%", "32%", 'upper left', bbox_to_anchor=(0.1,0,1,0.95), bbox_transform=plot.transAxes)
-    inset_plot = plot_on_ax(df_est.copy(), axins2, 'l', 'sample_occured', True, None, 'len', '', 'sampled cells', opt_line=False, drop_zeros=True)
+    inset_plot = plot_on_ax(df_est.copy(), axins2, 'l', 'sample_occured', True, None, 'len', '', 'sampled cycles', opt_line=False, drop_zeros=True)
     #axins2.plot(df_est[df_est.run == 0].l, df_est[df_est.run == 0].a_priori, 'r-')
 
 
