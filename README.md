@@ -43,7 +43,7 @@ There are five main experiments:
 - **time_exp**: Runtime experiment.
 - **estimation_exp_{er,sbm}**: Estimates the occurrence probability (for different settings)
 - **homology_exp**: Analyzes the properties of generated CCs.
-- **simulate_realworld**: Adapted from [1] to showcase the usage of RCC as a baseline.
+- **simulate_realworld**: Adapted from [2] to showcase the usage of RCC as a baseline.
 
 ## References
 
