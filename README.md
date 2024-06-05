@@ -8,7 +8,7 @@
 
 ## About
 
-This repository contains the evaluation workflow for the paper *Random Abstract Cell Complexes*.
+This repository contains the evaluation workflow for the paper [*Random Abstract Cell Complexes*](https://arxiv.org/abs/2406.01999).
 You can find the accompanying Python package at [🦝 PyRaCCooN](https://github.com/josefhoppe/py-raccoon).
 If you use this code, please cite our paper:
 
